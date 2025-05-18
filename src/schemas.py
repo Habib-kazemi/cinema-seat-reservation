@@ -1,12 +1,15 @@
 """
 Pydantic schemas for API request/response validation
 """
-from typing import Optional
 from datetime import date
+from typing import Optional
 from pydantic import BaseModel
 
 
 class UserCreate(BaseModel):
+    """
+    Schema for creating a new user
+    """
     email: str
     password: str
     full_name: str
@@ -14,11 +17,17 @@ class UserCreate(BaseModel):
 
 
 class UserResponse(BaseModel):
+    """
+    Schema for user creation/retrieval response
+    """
     id: int
     message: str
 
 
 class MovieCreate(BaseModel):
+    """
+    Schema for creating a new movie
+    """
     title: str
     genre_id: int
     duration: int
@@ -28,5 +37,8 @@ class MovieCreate(BaseModel):
 
 
 class MovieResponse(BaseModel):
+    """
+    Schema for movie creation response
+    """
     id: int
     message: str
