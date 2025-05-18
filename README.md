@@ -24,12 +24,12 @@ A RESTful API for a cinema seat reservation system built with Python, FastAPI, a
    - Open GitHub Desktop.
    - Go to `File` → `Clone Repository`.
    - Select `your-username/cinema-seat-reservation`.
-   - Set the path to `C:\Users\zh\Desktop\python-projects\cinema-seat-reservation`.
+   - Choose a local path (e.g., `Desktop\python-projects\cinema-seat-reservation`).
    - Click `Clone`.
 
 2. **Create and activate virtual environment**:
    ```cmd
-   cd C:\Users\zh\Desktop\python-projects\cinema-seat-reservation
+   cd path\to\cinema-seat-reservation
    python -m venv venv
    venv\Scripts\activate
    ```
