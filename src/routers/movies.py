@@ -35,6 +35,7 @@ async def add_movie(movie: MovieCreate, db: Session = Depends(get_db)):
         return {"id": db_movie.id, "message": "Movie added successfully"}
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(
+            status_code=500, detail="Internal server error") from exc
