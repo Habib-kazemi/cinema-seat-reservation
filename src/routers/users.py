@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from ..database import get_db
-from ..models import User
+from ..models import User, Role
 from ..schemas import UserCreate, UserResponse
 
 router = APIRouter()
@@ -23,7 +23,7 @@ async def register_user(user: UserCreate, db: Session = Depends(get_db)):
         db_user = User(
             email=user.email,
             password_hash=hashed_password,
-            role="user",
+            role=Role.USER,
             full_name=user.full_name,
             phone_number=user.phone_number
         )
@@ -31,9 +31,10 @@ async def register_user(user: UserCreate, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(db_user)
         return {"id": db_user.id, "message": "User registered successfully"}
-    except Exception as e:
+    except Exception as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(
+            status_code=500, detail="Internal server error") from exc
 
 
 @router.get("/{user_id}", response_model=UserResponse)
@@ -46,5 +47,6 @@ async def get_user(user_id: int, db: Session = Depends(get_db)):
         if not db_user:
             raise HTTPException(status_code=404, detail="User not found")
         return {"id": db_user.id, "message": f"User {db_user.full_name} retrieved successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500, detail="Internal server error") from exc
