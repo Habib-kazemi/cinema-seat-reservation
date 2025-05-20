@@ -36,7 +36,7 @@ CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) CHECK (role IN ('admin', 'user')) NOT NULL,
+    role VARCHAR(20) CHECK (role IN ('ADMIN', 'USER')) NOT NULL,
     full_name VARCHAR(255) NOT NULL,
     phone_number VARCHAR(20),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

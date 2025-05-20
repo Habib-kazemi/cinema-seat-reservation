@@ -33,6 +33,7 @@ async def register_user(user: UserCreate, db: Session = Depends(get_db)):
         return {"id": db_user.id, "message": "User registered successfully"}
     except Exception as exc:
         db.rollback()
+        print(f"Error in register_user: {exc}")
         raise HTTPException(
             status_code=500, detail="Internal server error") from exc
 
