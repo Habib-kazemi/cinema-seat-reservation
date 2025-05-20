@@ -11,8 +11,8 @@ class Role(str, enum.Enum):
     """
     Enum for user roles
     """
-    ADMIN = "admin"
-    USER = "user"
+    ADMIN = "ADMIN"
+    USER = "USER"
 
 
 class Status(str, enum.Enum):
