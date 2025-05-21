@@ -2,7 +2,7 @@
 Database models using SQLAlchemy
 """
 import enum
-from sqlalchemy import Column, Integer, String, Date, Text, Float, DateTime, Enum
+from sqlalchemy import Column, Integer, String, Date, Text, Numeric, DateTime
 from sqlalchemy.sql.functions import now
 from .database import Base
 
@@ -68,7 +68,7 @@ class Showtime(Base):
     hall_id = Column(Integer, nullable=False)
     start_time = Column(DateTime, nullable=False)
     end_time = Column(DateTime, nullable=False)
-    price = Column(Float, nullable=False)
+    price = Column(Numeric(10, 2), nullable=False)
 
 
 class User(Base):
@@ -79,7 +79,8 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(255), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
-    role = Column(Enum(Role), nullable=False)
+    # Changed from Enum(Role) to String
+    role = Column(String(20), nullable=False)
     full_name = Column(String(255), nullable=False)
     phone_number = Column(String(20))
     created_at = Column(DateTime, server_default=now())
@@ -94,6 +95,7 @@ class Reservation(Base):
     user_id = Column(Integer, nullable=False)
     showtime_id = Column(Integer, nullable=False)
     seat_number = Column(String(10), nullable=False)
-    price = Column(Float, nullable=False)
-    status = Column(Enum(Status), nullable=False)
+    price = Column(Numeric(10, 2), nullable=False)
+    # Changed from Enum(Status) to String
+    status = Column(String(20), nullable=False)
     created_at = Column(DateTime, server_default=now())
