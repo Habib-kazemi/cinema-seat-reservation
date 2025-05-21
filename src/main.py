@@ -2,12 +2,16 @@
 Main entry point for the cinema seat reservation app
 """
 from fastapi import FastAPI
-from .routers import users, movies
+from .routers import users, movies, reservations, showtimes, halls
 
 app = FastAPI(title="Cinema Seat Reservation API")
 
-app.include_router(users.router, prefix="/api/users", tags=["users"])
-app.include_router(movies.router, prefix="/api/movies", tags=["movies"])
+app.include_router(users, prefix="/api/users", tags=["users"])
+app.include_router(movies, prefix="/api/movies", tags=["movies"])
+app.include_router(reservations, prefix="/api/reservations",
+                   tags=["reservations"])
+app.include_router(showtimes, prefix="/api/showtimes", tags=["showtimes"])
+app.include_router(halls, prefix="/api/halls", tags=["halls"])
 
 
 @app.get("/")

@@ -1,0 +1,64 @@
+"""
+Showtime-related API routes
+"""
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from ..database import get_db
+from ..models import Showtime, Movie, Hall
+from ..schemas import ShowtimeCreate, ShowtimeResponse
+
+router = APIRouter()
+
+
+@router.post("/", response_model=ShowtimeResponse)
+async def create_showtime(showtime: ShowtimeCreate, db: Session = Depends(get_db)):
+    """
+    Create a new showtime for a movie in a hall.
+
+    Args:
+        showtime: Showtime data including movie_id, hall_id, start_time, end_time, and price.
+        db: Database session.
+
+    Returns:
+        dict: Showtime ID and success message.
+
+    Raises:
+        HTTPException: If movie, hall, or time is invalid.
+    """
+    try:
+        # Check if movie exists
+        movie = db.query(Movie).filter(Movie.id == showtime.movie_id).first()
+        if not movie:
+            raise HTTPException(status_code=404, detail="Movie not found")
+
+        # Check if hall exists
+        hall = db.query(Hall).filter(Hall.id == showtime.hall_id).first()
+        if not hall:
+            raise HTTPException(status_code=404, detail="Hall not found")
+
+        # Check if end_time is after start_time
+        if showtime.end_time <= showtime.start_time:
+            raise HTTPException(
+                status_code=400, detail="End time must be after start time")
+
+        # Create new showtime
+        db_showtime = Showtime(
+            movie_id=showtime.movie_id,
+            hall_id=showtime.hall_id,
+            start_time=showtime.start_time,
+            end_time=showtime.end_time,
+            price=showtime.price
+        )
+        db.add(db_showtime)
+        db.commit()
+        db.refresh(db_showtime)
+
+        return {"id": db_showtime.id, "message": "Showtime created successfully"}
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        db.rollback()
+        print(f"Error in create_showtime: {exc}")
+        raise HTTPException(
+            status_code=500, detail="Internal server error") from exc
