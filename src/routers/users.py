@@ -1,53 +1,61 @@
-"""
-User-related API routes
-"""
-from fastapi import APIRouter, Depends, HTTPException
+"""API routes for user authentication and management."""
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext
+
+from ..auth import create_access_token, hash_password, verify_password
 from ..database import get_db
-from ..models import User, Role
-from ..schemas import UserCreate, UserResponse
+from ..models import Role, User
+from ..schemas import Token, UserCreate, UserLogin, UserResponse
 
 router = APIRouter()
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
 @router.post("/register", response_model=UserResponse)
-async def register_user(user: UserCreate, db: Session = Depends(get_db)):
-    """
-    Register a new user
-    """
-    try:
-        hashed_password = pwd_context.hash(user.password)
-        db_user = User(
-            email=user.email,
-            password_hash=hashed_password,
-            role=Role.USER,
-            full_name=user.full_name,
-            phone_number=user.phone_number
-        )
-        db.add(db_user)
-        db.commit()
-        db.refresh(db_user)
-        return {"id": db_user.id, "message": "User registered successfully"}
-    except Exception as exc:
-        db.rollback()
-        print(f"Error in register_user: {exc}")
-        raise HTTPException(
-            status_code=500, detail="Internal server error") from exc
+async def register(user: UserCreate, db: Session = Depends(get_db)) -> UserResponse:
+    """Register a new user.
 
+    Args:
+        user: User creation data.
+        db: Database session.
 
-@router.get("/{user_id}", response_model=UserResponse)
-async def get_user(user_id: int, db: Session = Depends(get_db)):
+    Returns:
+        Created user details.
+
+    Raises:
+        HTTPException: If email is already registered.
     """
-    Get user by ID
+    if db.query(User).filter(User.email == user.email).first():
+        raise HTTPException(status_code=400, detail="Email already registered")
+    hashed_password = hash_password(user.password)
+    db_user = User(
+        email=user.email,
+        password_hash=hashed_password,
+        role=Role.USER,
+        full_name=user.full_name,
+        phone_number=user.phone_number,
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+@router.post("/login", response_model=Token)
+async def login(user: UserLogin, db: Session = Depends(get_db)) -> Token:
+    """Authenticate user and return JWT token.
+
+    Args:
+        user: User login credentials.
+        db: Database session.
+
+    Returns:
+        JWT token and token type.
+
+    Raises:
+        HTTPException: If credentials are invalid.
     """
-    try:
-        db_user = db.query(User).filter(User.id == user_id).first()
-        if not db_user:
-            raise HTTPException(status_code=404, detail="User not found")
-        return {"id": db_user.id, "message": f"User {db_user.full_name} retrieved successfully"}
-    except Exception as exc:
+    db_user = db.query(User).filter(User.email == user.email).first()
+    if not db_user or not verify_password(user.password, db_user.password_hash):
         raise HTTPException(
-            status_code=500, detail="Internal server error") from exc
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+    access_token = create_access_token(data={"sub": db_user.email})
+    return {"access_token": access_token, "token_type": "bearer"}
