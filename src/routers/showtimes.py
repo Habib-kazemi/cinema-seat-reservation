@@ -1,13 +1,24 @@
 """
 Showtime-related API routes
 """
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+
 from ..database import get_db
 from ..models import Showtime, Movie, Hall
 from ..schemas import ShowtimeCreate, ShowtimeResponse
 
-router = APIRouter()
+router = APIRouter(tags=["showtimes"])
+
+
+@router.get("/", response_model=List[ShowtimeResponse])
+async def get_showtimes(db: Session = Depends(get_db)):
+    """
+    Get a list of all showtimes.
+    """
+    showtimes = db.query(Showtime).all()
+    return showtimes
 
 
 @router.post("/", response_model=ShowtimeResponse)
@@ -20,7 +31,7 @@ async def create_showtime(showtime: ShowtimeCreate, db: Session = Depends(get_db
         db: Database session.
 
     Returns:
-        dict: Showtime ID and success message.
+        ShowtimeResponse: Created showtime details.
 
     Raises:
         HTTPException: If movie, hall, or time is invalid.
@@ -52,13 +63,10 @@ async def create_showtime(showtime: ShowtimeCreate, db: Session = Depends(get_db
         db.add(db_showtime)
         db.commit()
         db.refresh(db_showtime)
-
-        return {"id": db_showtime.id, "message": "Showtime created successfully"}
-
+        return db_showtime
     except HTTPException:
         raise
     except Exception as exc:
         db.rollback()
-        print(f"Error in create_showtime: {exc}")
         raise HTTPException(
             status_code=500, detail="Internal server error") from exc
