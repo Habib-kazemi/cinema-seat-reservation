@@ -1,7 +1,8 @@
-"""Pydantic schemas for API request and response validation."""
-
+"""
+Pydantic schemas for API request and response validation.
+"""
 from datetime import date, datetime
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
@@ -33,6 +34,12 @@ class MovieBase(BaseModel):
     release_date: date
     description: Optional[str] = None
     poster_url: Optional[str] = None
+
+
+class MovieBaseSimple(BaseModel):
+    """Simplified schema for movie data in showtimes."""
+    id: int
+    title: str
 
 
 class MovieCreate(MovieBase):
@@ -78,6 +85,12 @@ class ShowtimeResponse(ShowtimeBase, BaseSchema):
     id: int
 
 
+class HallShowtimeResponse(HallBase, BaseSchema):
+    """Schema for hall response with active showtimes."""
+    id: int
+    showtimes: List[dict]  # Contains showtime details with movie
+
+
 class UserBase(BaseModel):
     """Base schema for user data."""
     email: EmailStr
@@ -110,7 +123,6 @@ class Token(BaseModel):
 
 class ReservationBase(BaseModel):
     """Base schema for reservation data."""
-    user_id: int
     showtime_id: int
     seat_number: str
 
@@ -119,10 +131,12 @@ class ReservationCreate(ReservationBase):
     """Schema for creating a reservation."""
 
 
-class ReservationResponse(BaseSchema):
+class ReservationResponse(ReservationBase, BaseSchema):
     """Schema for reservation response."""
     id: int
-    message: str
+    user_id: int
+    price: float
+    created_at: datetime
 
 
 class ReservationCancelResponse(BaseSchema):

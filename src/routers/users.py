@@ -3,12 +3,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from ..auth import create_access_token, hash_password, verify_password
+from .auth import create_access_token, hash_password, verify_password
 from ..database import get_db
 from ..models import Role, User
 from ..schemas import Token, UserCreate, UserLogin, UserResponse
 
 router = APIRouter()
+
 
 @router.post("/register", response_model=UserResponse)
 async def register(user: UserCreate, db: Session = Depends(get_db)) -> UserResponse:
@@ -38,6 +39,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)) -> UserRespo
     db.commit()
     db.refresh(db_user)
     return db_user
+
 
 @router.post("/login", response_model=Token)
 async def login(user: UserLogin, db: Session = Depends(get_db)) -> Token:

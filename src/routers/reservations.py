@@ -4,9 +4,9 @@ Reservation-related API routes
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from ..auth import get_current_user
+from .auth import get_current_user
 from ..database import get_db
-from ..models import Hall, Reservation, Showtime, User
+from ..models import Hall, Reservation, Showtime, User, Status
 from ..schemas import ReservationCreate, ReservationResponse, ReservationCancelResponse
 
 router = APIRouter(tags=["reservations"])
@@ -19,11 +19,6 @@ async def create_reservation(
     current_user: User = Depends(get_current_user),
 ):
     """Create a new reservation."""
-    # Check if user_id matches current user
-    if reservation.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Cannot create reservation for another user")
-
     # Check if showtime exists
     showtime = db.query(Showtime).filter(
         Showtime.id == reservation.showtime_id).first()
@@ -59,9 +54,11 @@ async def create_reservation(
                             detail="Invalid seat number format") from exc
 
     db_reservation = Reservation(
-        user_id=reservation.user_id,
+        user_id=current_user.id,
         showtime_id=reservation.showtime_id,
         seat_number=reservation.seat_number,
+        price=showtime.price,
+        status=Status.CONFIRMED
     )
     db.add(db_reservation)
     db.commit()
@@ -87,3 +84,50 @@ async def cancel_reservation(
     db.delete(reservation)
     db.commit()
     return {"message": "Reservation cancelled successfully"}
+
+
+@router.get("/showtimes/{showtime_id}/seats")
+async def get_available_seats(
+    showtime_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get available seats for a showtime.
+
+    Args:
+        showtime_id: ID of the showtime.
+        db: Database session.
+
+    Returns:
+        List of available seat numbers (e.g., ["A12", "B5"]).
+
+    Raises:
+        HTTPException: If showtime or hall is not found.
+    """
+    # Check if showtime exists
+    showtime = db.query(Showtime).filter(Showtime.id == showtime_id).first()
+    if not showtime:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Showtime not found")
+
+    # Get hall details
+    hall = db.query(Hall).filter(Hall.id == showtime.hall_id).first()
+    if not hall:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Hall not found")
+
+    # Get reserved seats for this showtime
+    reserved_seats = db.query(Reservation).filter(
+        Reservation.showtime_id == showtime_id).all()
+    reserved_seats = {seat.seat_number for seat in reserved_seats}
+
+    # Generate available seats
+    available_seats = []
+    for row in range(1, hall.rows + 1):
+        row_letter = chr(ord('A') + row - 1)  # A, B, C, ...
+        for col in range(1, hall.columns + 1):
+            seat_number = f"{row_letter}{col}"
+            if seat_number not in reserved_seats:
+                available_seats.append(seat_number)
+
+    return {"showtime_id": showtime_id, "available_seats": available_seats}

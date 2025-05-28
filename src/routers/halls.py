@@ -1,52 +1,56 @@
 """
-Hall-related API routes
+Hall-related API routes for public access.
 """
-from fastapi import APIRouter, Depends, HTTPException
+from datetime import datetime, timezone
+from typing import List
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
 from ..database import get_db
-from ..models import Hall
-from ..schemas import HallCreate, HallResponse
+from ..models import Hall, Showtime
+from ..schemas import HallShowtimeResponse
 
-router = APIRouter()
+router = APIRouter(tags=["halls"])
 
 
-@router.post("/", response_model=HallResponse)
-async def create_hall(hall: HallCreate, db: Session = Depends(get_db)):
+@router.get("/", response_model=List[HallShowtimeResponse])
+async def get_halls_with_showtimes(db: Session = Depends(get_db)):
     """
-    Create a new cinema hall.
+    Retrieve a list of all cinema halls with their current showtimes and movies.
 
     Args:
-        hall: Hall data including name, rows, and columns.
         db: Database session.
 
     Returns:
-        dict: Hall ID and success message.
-
-    Raises:
-        HTTPException: If rows or columns are invalid.
+        List[HallShowtimeResponse]: List of halls with their active showtimes and movie details.
     """
-    try:
-        # Check if rows and columns are positive
-        if hall.rows <= 0 or hall.columns <= 0:
-            raise HTTPException(
-                status_code=400, detail="Rows and columns must be positive")
-
-        # Create new hall
-        db_hall = Hall(
-            name=hall.name,
-            rows=hall.rows,
-            columns=hall.columns
-        )
-        db.add(db_hall)
-        db.commit()
-        db.refresh(db_hall)
-
-        return {"id": db_hall.id, "message": "Hall created successfully"}
-
-    except HTTPException:
-        raise
-    except Exception as exc:
-        db.rollback()
-        print(f"Error in create_hall: {exc}")
-        raise HTTPException(
-            status_code=500, detail="Internal server error") from exc
+    current_time = datetime.now(timezone.utc)
+    halls = db.query(Hall).all()
+    result = []
+    for hall in halls:
+        showtimes = db.query(Showtime).filter(
+            Showtime.hall_id == hall.id,
+            Showtime.start_time <= current_time,
+            Showtime.end_time >= current_time
+        ).all()
+        showtime_data = [
+            {
+                "id": showtime.id,
+                "movie": {
+                    "id": showtime.movie.id,
+                    "title": showtime.movie.title
+                },
+                "start_time": showtime.start_time,
+                "end_time": showtime.end_time,
+                "price": showtime.price
+            }
+            for showtime in showtimes
+        ]
+        result.append({
+            "id": hall.id,
+            "name": hall.name,
+            "rows": hall.rows,
+            "columns": hall.columns,
+            "showtimes": showtime_data
+        })
+    return result
