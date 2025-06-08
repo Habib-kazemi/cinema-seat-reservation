@@ -4,7 +4,7 @@ Main application module for Cinema Seat Reservation API.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import admin, halls, movies, reservations, showtimes
+from .routers import admin, hall, movie, reservation, showtime, cinema
 from .routers.auth import router as auth
 
 app = FastAPI(title="Cinema Seat Reservation API")
@@ -24,8 +24,9 @@ async def root():
     return {"message": "Welcome to Cinema Seat Reservation API. Visit /docs for API documentation."}
 
 app.include_router(auth, prefix="/auth", tags=["auth"])
-app.include_router(movies, prefix="/movies", tags=["movies"])
-app.include_router(showtimes, prefix="/showtimes", tags=["showtimes"])
-app.include_router(halls, prefix="/halls", tags=["halls"])
-app.include_router(reservations, prefix="/reservations", tags=["reservations"])
+app.include_router(movie, prefix="/movie", tags=["movie"])
+app.include_router(showtime, prefix="/showtime", tags=["showtime"])
+app.include_router(hall, prefix="/hall", tags=["hall"])
+app.include_router(reservation, prefix="/reservation", tags=["reservation"])
 app.include_router(admin, prefix="/admin", tags=["admin"])
+app.include_router(cinema, prefix="/cinema", tags=["cinema"])

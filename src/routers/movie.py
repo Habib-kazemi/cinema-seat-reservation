@@ -1,4 +1,3 @@
-
 """
 Movie-related API routes
 """
@@ -11,7 +10,7 @@ from ..database import get_db
 from ..models import Movie
 from ..schemas import MovieResponse
 
-router = APIRouter(tags=["movies"])
+router = APIRouter(tags=["movie"])
 
 
 @router.get("/", response_model=List[MovieResponse])

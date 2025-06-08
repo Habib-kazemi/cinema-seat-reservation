@@ -9,7 +9,7 @@ from ..database import get_db
 from ..models import Hall, Reservation, Showtime, User, Status
 from ..schemas import ReservationCreate, ReservationResponse, ReservationCancelResponse
 
-router = APIRouter(tags=["reservations"])
+router = APIRouter(tags=["reservation"])
 
 
 @router.post("/", response_model=ReservationResponse, status_code=status.HTTP_201_CREATED)
@@ -58,7 +58,7 @@ async def create_reservation(
         showtime_id=reservation.showtime_id,
         seat_number=reservation.seat_number,
         price=showtime.price,
-        status=Status.CONFIRMED
+        status=Status.PENDING  # Changed to PENDING instead of CONFIRMED
     )
     db.add(db_reservation)
     db.commit()
@@ -131,3 +131,29 @@ async def get_available_seats(
                 available_seats.append(seat_number)
 
     return {"showtime_id": showtime_id, "available_seats": available_seats}
+
+
+@router.get("/", response_model=list[ReservationResponse])
+async def get_user_reservations(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Get all reservations for the current user.
+
+    Args:
+        db: Database session.
+        current_user: Authenticated user.
+
+    Returns:
+        List of user's reservations.
+
+    Raises:
+        HTTPException: If no reservations are found.
+    """
+    reservation = db.query(Reservation).filter(
+        Reservation.user_id == current_user.id).all()
+    if not reservation:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No reservation found")
+    return reservation

@@ -1,4 +1,3 @@
-
 """
 Showtime-related API routes
 """
@@ -12,7 +11,7 @@ from ..database import get_db
 from ..models import Showtime
 from ..schemas import ShowtimeResponse
 
-router = APIRouter(tags=["showtimes"])
+router = APIRouter(tags=["showtime"])
 
 
 @router.get("/", response_model=List[ShowtimeResponse])
@@ -22,7 +21,7 @@ async def get_showtimes(
     db: Session = Depends(get_db)
 ):
     """
-    Get a list of showtimes with optional filters.
+    Get a list of showtime with optional filters.
 
     Args:
         movie_id: Filter by movie ID.
@@ -30,7 +29,7 @@ async def get_showtimes(
         db: Database session.
 
     Returns:
-        List of showtimes matching the filters.
+        List of showtime matching the filters.
     """
     query = db.query(Showtime)
     if movie_id:

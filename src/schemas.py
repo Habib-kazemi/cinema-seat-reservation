@@ -3,13 +3,37 @@ Pydantic schemas for API request and response validation.
 """
 from datetime import date, datetime
 from typing import Optional, List
+from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, EmailStr
+
+
+class Status(str, Enum):
+    """Enum for reservation status."""
+    PENDING = "PENDING"
+    CONFIRMED = "CONFIRMED"
+    CANCELED = "CANCELED"
 
 
 class BaseSchema(BaseModel):
     """Base schema with common configuration for all models."""
     model_config = ConfigDict(from_attributes=True)
+
+
+class CinemaBase(BaseModel):
+    """Base schema for cinema data."""
+    name: str
+    address: str
+
+
+class CinemaCreate(CinemaBase):
+    """Schema for creating a cinema."""
+
+
+class CinemaResponse(CinemaBase, BaseSchema):
+    """Schema for cinema response."""
+    id: int
+    halls: List["HallResponse"] = []  # Include related hall
 
 
 class GenreBase(BaseModel):
@@ -37,7 +61,7 @@ class MovieBase(BaseModel):
 
 
 class MovieBaseSimple(BaseModel):
-    """Simplified schema for movie data in showtimes."""
+    """Simplified schema for movie data in showtime."""
     id: int
     title: str
 
@@ -56,6 +80,7 @@ class HallBase(BaseModel):
     name: str
     rows: int
     columns: int
+    cinema_id: int  # Added to associate hall with cinema
 
 
 class HallCreate(HallBase):
@@ -65,6 +90,7 @@ class HallCreate(HallBase):
 class HallResponse(HallBase, BaseSchema):
     """Schema for hall response."""
     id: int
+    showtimes: List["ShowtimeResponse"] = []  # Updated to include showtime
 
 
 class ShowtimeBase(BaseModel):
@@ -83,12 +109,7 @@ class ShowtimeCreate(ShowtimeBase):
 class ShowtimeResponse(ShowtimeBase, BaseSchema):
     """Schema for showtime response."""
     id: int
-
-
-class HallShowtimeResponse(HallBase, BaseSchema):
-    """Schema for hall response with active showtimes."""
-    id: int
-    showtimes: List[dict]  # Contains showtime details with movie
+    movie: MovieBaseSimple
 
 
 class UserBase(BaseModel):
@@ -101,6 +122,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     """Schema for creating a user."""
     password: str
+    role: Optional[str] = "USER"  # Added role with default "USER"
 
 
 class UserLogin(BaseModel):
@@ -137,8 +159,14 @@ class ReservationResponse(ReservationBase, BaseSchema):
     user_id: int
     price: float
     created_at: datetime
+    status: Status
 
 
 class ReservationCancelResponse(BaseSchema):
     """Schema for reservation cancellation response."""
     message: str
+
+
+class ReservationStatusUpdate(BaseSchema):
+    """Schema for updating reservation status (approve/reject)."""
+    status: Status

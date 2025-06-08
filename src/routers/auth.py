@@ -1,4 +1,3 @@
-
 """
 Authentication routes for user registration and login.
 """
@@ -56,7 +55,7 @@ def create_access_token(data: Dict) -> str:
     """Create a JWT access token.
 
     Args:
-        data: Dictionary containing token payload (e.g., user email).
+        data: Dictionary containing token payload (e.g., user email and role).
 
     Returns:
         Encoded JWT token as string.
@@ -64,7 +63,7 @@ def create_access_token(data: Dict) -> str:
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + \
         timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "role": data.get("role", "USER")})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
@@ -124,7 +123,8 @@ async def register_user(user: UserCreate, db: Session = Depends(get_db)):
     db_user = User(
         email=user.email,
         password_hash=hash_password(user.password),
-        role=Role.USER,
+        # Use input role or default to USER
+        role=getattr(Role, user.role) if user.role else Role.USER,
         full_name=user.full_name,
         phone_number=user.phone_number
     )
@@ -156,5 +156,6 @@ async def login_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
-    access_token = create_access_token(data={"sub": db_user.email})
+    access_token = create_access_token(
+        data={"sub": db_user.email, "role": db_user.role})
     return {"access_token": access_token, "token_type": "bearer"}

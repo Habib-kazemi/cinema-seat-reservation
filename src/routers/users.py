@@ -8,7 +8,7 @@ from ..database import get_db
 from ..models import Role, User
 from ..schemas import Token, UserCreate, UserLogin, UserResponse
 
-router = APIRouter()
+router = APIRouter(tags=["users"])
 
 
 @router.post("/register", response_model=UserResponse)
