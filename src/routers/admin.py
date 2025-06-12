@@ -32,7 +32,7 @@ def check_admin(user: User = Depends(get_current_user)):
     return user
 
 
-@router.post("/cinema", response_model=CinemaResponse)
+@router.post("/cinema", response_model=CinemaResponse, status_code=status.HTTP_201_CREATED)
 async def create_cinema(
         cinema: CinemaCreate, db: Session = Depends(get_db), _=Depends(check_admin)):
     """
@@ -46,7 +46,7 @@ async def create_cinema(
     Returns:
         CinemaResponse: Created cinema details.
     """
-    db_cinema = Cinema(**cinema.dict())
+    db_cinema = Cinema(**cinema.model_dump())
     db.add(db_cinema)
     db.commit()
     db.refresh(db_cinema)
@@ -94,7 +94,7 @@ async def get_hall(db: Session = Depends(get_db), _=Depends(check_admin)):
     return halls
 
 
-@router.post("/hall", response_model=HallResponse)
+@router.post("/hall", response_model=HallResponse, status_code=status.HTTP_201_CREATED)
 async def create_hall(hall: HallCreate, db: Session = Depends(get_db), _=Depends(check_admin)):
     """
     Create a new cinema hall.
@@ -272,7 +272,7 @@ async def delete_hall(hall_id: int, db: Session = Depends(get_db), _=Depends(che
     return {"message": "Hall deleted successfully"}
 
 
-@router.post("/movie", response_model=MovieResponse)
+@router.post("/movie", response_model=MovieResponse, status_code=status.HTTP_201_CREATED)
 async def create_movie(movie: MovieCreate, db: Session = Depends(get_db), _=Depends(check_admin)):
     """
     Create a new movie.
@@ -285,7 +285,7 @@ async def create_movie(movie: MovieCreate, db: Session = Depends(get_db), _=Depe
     Returns:
         MovieResponse: Created movie details.
     """
-    db_movie = Movie(**movie.dict())
+    db_movie = Movie(**movie.model_dump())
     db.add(db_movie)
     db.commit()
     db.refresh(db_movie)
@@ -406,7 +406,7 @@ async def delete_movie(movie_id: int, db: Session = Depends(get_db), _=Depends(c
     return {"message": "Movie deleted successfully"}
 
 
-@router.post("/showtime", response_model=ShowtimeResponse)
+@router.post("/showtime", response_model=ShowtimeResponse, status_code=status.HTTP_201_CREATED)
 async def create_showtime(
     showtime: ShowtimeCreate, db: Session = Depends(get_db), _=Depends(check_admin)
 ):
@@ -421,7 +421,7 @@ async def create_showtime(
     Returns:
         ShowtimeResponse: Created showtime details.
     """
-    db_showtime = Showtime(**showtime.dict())
+    db_showtime = Showtime(**showtime.model_dump())
     db.add(db_showtime)
     db.commit()
     db.refresh(db_showtime)

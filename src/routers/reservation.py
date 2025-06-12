@@ -86,7 +86,7 @@ async def cancel_reservation(
     return {"message": "Reservation cancelled successfully"}
 
 
-@router.get("/showtimes/{showtime_id}/seats")
+@router.get("/showtime/{showtime_id}/seats")
 async def get_available_seats(
     showtime_id: int,
     db: Session = Depends(get_db)
@@ -134,7 +134,7 @@ async def get_available_seats(
 
 
 @router.get("/", response_model=list[ReservationResponse])
-async def get_user_reservations(
+async def get_user_reservation(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

@@ -5,7 +5,7 @@ from datetime import date, datetime
 from typing import Optional, List
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, field_serializer
 
 
 class Status(str, Enum):
@@ -17,7 +17,9 @@ class Status(str, Enum):
 
 class BaseSchema(BaseModel):
     """Base schema with common configuration for all models."""
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True
+    )
 
 
 class CinemaBase(BaseModel):
@@ -74,6 +76,11 @@ class MovieResponse(MovieBase, BaseSchema):
     """Schema for movie response."""
     id: int
 
+    @field_serializer('release_date')
+    def serialize_date(self, dt: date) -> str:
+        """Convert datetime to ISO 8601 string."""
+        return dt.isoformat()
+
 
 class HallBase(BaseModel):
     """Base schema for hall data."""
@@ -110,6 +117,11 @@ class ShowtimeResponse(ShowtimeBase, BaseSchema):
     """Schema for showtime response."""
     id: int
     movie: MovieBaseSimple
+
+    @field_serializer('start_time', 'end_time')
+    def serialize_datetime(self, dt: datetime) -> str:
+        """Convert datetime to ISO 8601 string."""
+        return dt.isoformat()
 
 
 class UserBase(BaseModel):
@@ -160,6 +172,11 @@ class ReservationResponse(ReservationBase, BaseSchema):
     price: float
     created_at: datetime
     status: Status
+
+    @field_serializer('created_at')
+    def serialize_datetime(self, dt: datetime) -> str:
+        """Convert datetime to ISO 8601 string."""
+        return dt.isoformat()
 
 
 class ReservationCancelResponse(BaseSchema):
