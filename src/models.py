@@ -25,7 +25,7 @@ class Status(str, enum.Enum):
     CANCELED = "CANCELED"
 
 
-class Cinema(Base):
+class Cinema(Base):  # pylint: disable=too-few-public-methods
     """
     Model for cinema
     """
@@ -37,7 +37,7 @@ class Cinema(Base):
     hall = relationship("Hall", back_populates="cinema")
 
 
-class Genre(Base):
+class Genre(Base):  # pylint: disable=too-few-public-methods
     """
     Model for movie genre
     """
@@ -46,7 +46,7 @@ class Genre(Base):
     name = Column(String(50), nullable=False)
 
 
-class Movie(Base):
+class Movie(Base):  # pylint: disable=too-few-public-methods
     """
     Model for movie
     """
@@ -61,7 +61,7 @@ class Movie(Base):
     showtime = relationship("Showtime", back_populates="movie")
 
 
-class Hall(Base):
+class Hall(Base):  # pylint: disable=too-few-public-methods
     """
     Model for cinema hall
     """
@@ -76,7 +76,7 @@ class Hall(Base):
     showtime = relationship("Showtime", back_populates="hall")
 
 
-class Showtime(Base):
+class Showtime(Base):  # pylint: disable=too-few-public-methods
     """
     Model for showtime
     """
@@ -92,7 +92,7 @@ class Showtime(Base):
     reservation = relationship("Reservation", back_populates="showtime")
 
 
-class User(Base):
+class User(Base):  # pylint: disable=too-few-public-methods
     """
     Model for users
     """
@@ -108,7 +108,7 @@ class User(Base):
         "Reservation", back_populates="user", cascade="all, delete-orphan")
 
 
-class Reservation(Base):
+class Reservation(Base):  # pylint: disable=too-few-public-methods
     """
     Model for reservation
     """

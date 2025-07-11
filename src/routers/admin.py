@@ -4,37 +4,24 @@ Admin-related API routes for managing movie, showtime, hall, cinema, and reserva
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-
-from .auth import get_current_user
 from ..database import get_db
 from ..models import Hall, Movie, Showtime, User, Reservation, Status, Cinema
-from ..schemas import HallCreate, HallResponse, MovieCreate, MovieResponse, ShowtimeCreate, ShowtimeResponse, ReservationResponse, UserResponse, CinemaCreate, CinemaResponse
+from ..schemas import (
+    HallCreate, HallResponse, MovieCreate, MovieResponse,
+    ShowtimeCreate, ShowtimeResponse, ReservationResponse,
+    UserResponse, CinemaCreate, CinemaResponse)
+from ..utils.check_admin import check_admin
 
-router = APIRouter(tags=["admin"])
-
-
-def check_admin(user: User = Depends(get_current_user)):
-    """
-    Ensure the user has admin privileges.
-
-    Args:
-        user: Current user from authentication dependency.
-
-    Returns:
-        User: The authenticated admin user.
-
-    Raises:
-        HTTPException: If the user is not an admin.
-    """
-    if user.role != "ADMIN":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
-    return user
+router = APIRouter(
+    tags=["admin"],
+    prefix="/admin",  # Optional: if you want all routes to start with /admin
+    dependencies=[Depends(check_admin)]
+)
 
 
 @router.post("/cinema", response_model=CinemaResponse, status_code=status.HTTP_201_CREATED)
 async def create_cinema(
-        cinema: CinemaCreate, db: Session = Depends(get_db), _=Depends(check_admin)):
+        cinema: CinemaCreate, db: Session = Depends(get_db)):
     """
     Create a new cinema.
 
@@ -54,7 +41,7 @@ async def create_cinema(
 
 
 @router.delete("/cinema/{cinema_id}", response_model=dict)
-async def delete_cinema(cinema_id: int, db: Session = Depends(get_db), _=Depends(check_admin)):
+async def delete_cinema(cinema_id: int, db: Session = Depends(get_db)):
     """
     Delete a cinema by ID.
 
@@ -78,24 +65,8 @@ async def delete_cinema(cinema_id: int, db: Session = Depends(get_db), _=Depends
     return {"message": "Cinema deleted successfully"}
 
 
-@router.get("/hall", response_model=List[HallResponse])
-async def get_hall(db: Session = Depends(get_db), _=Depends(check_admin)):
-    """
-    Retrieve a list of all cinema hall.
-
-    Args:
-        db: Database session.
-        _: Admin user.
-
-    Returns:
-        List[HallResponse]: List of all hall with their details.
-    """
-    halls = db.query(Hall).all()
-    return halls
-
-
 @router.post("/hall", response_model=HallResponse, status_code=status.HTTP_201_CREATED)
-async def create_hall(hall: HallCreate, db: Session = Depends(get_db), _=Depends(check_admin)):
+async def create_hall(hall: HallCreate, db: Session = Depends(get_db)):
     """
     Create a new cinema hall.
 
@@ -191,6 +162,7 @@ async def update_hall(
 
 
 @router.patch("/hall/{hall_id}", response_model=HallResponse)
+# pylint: disable=too-many-arguments, too-many-positional-arguments
 async def partial_update_hall(
     hall_id: int,
     name: Optional[str] = None,
@@ -248,7 +220,7 @@ async def partial_update_hall(
 
 
 @router.delete("/hall/{hall_id}", response_model=dict)
-async def delete_hall(hall_id: int, db: Session = Depends(get_db), _=Depends(check_admin)):
+async def delete_hall(hall_id: int, db: Session = Depends(get_db)):
     """
     Delete a cinema hall by ID.
 
@@ -273,7 +245,7 @@ async def delete_hall(hall_id: int, db: Session = Depends(get_db), _=Depends(che
 
 
 @router.post("/movie", response_model=MovieResponse, status_code=status.HTTP_201_CREATED)
-async def create_movie(movie: MovieCreate, db: Session = Depends(get_db), _=Depends(check_admin)):
+async def create_movie(movie: MovieCreate, db: Session = Depends(get_db)):
     """
     Create a new movie.
 
@@ -319,7 +291,7 @@ async def update_movie(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
 
-    for key, value in movie.dict().items():
+    for key, value in movie.model_dump().items():
         setattr(db_movie, key, value)
     db.commit()
     db.refresh(db_movie)
@@ -327,6 +299,7 @@ async def update_movie(
 
 
 @router.patch("/movie/{movie_id}", response_model=MovieResponse)
+# pylint: disable=too-many-arguments, too-many-positional-arguments
 async def partial_update_movie(
     movie_id: int,
     title: Optional[str] = None,
@@ -382,7 +355,7 @@ async def partial_update_movie(
 
 
 @router.delete("/movie/{movie_id}", response_model=dict)
-async def delete_movie(movie_id: int, db: Session = Depends(get_db), _=Depends(check_admin)):
+async def delete_movie(movie_id: int, db: Session = Depends(get_db)):
     """
     Delete a movie by ID.
 
@@ -408,7 +381,7 @@ async def delete_movie(movie_id: int, db: Session = Depends(get_db), _=Depends(c
 
 @router.post("/showtime", response_model=ShowtimeResponse, status_code=status.HTTP_201_CREATED)
 async def create_showtime(
-    showtime: ShowtimeCreate, db: Session = Depends(get_db), _=Depends(check_admin)
+    showtime: ShowtimeCreate, db: Session = Depends(get_db)
 ):
     """
     Create a new showtime.
@@ -455,7 +428,7 @@ async def update_showtime(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Showtime not found")
 
-    for key, value in showtime.dict().items():
+    for key, value in showtime.model_dump().items():
         setattr(db_showtime, key, value)
     db.commit()
     db.refresh(db_showtime)
@@ -463,6 +436,7 @@ async def update_showtime(
 
 
 @router.patch("/showtime/{showtime_id}", response_model=ShowtimeResponse)
+# pylint: disable=too-many-arguments, too-many-positional-arguments
 async def partial_update_showtime(
     showtime_id: int,
     movie_id: Optional[int] = None,
@@ -514,7 +488,7 @@ async def partial_update_showtime(
 
 
 @router.delete("/showtime/{showtime_id}", response_model=dict)
-async def delete_showtime(showtime_id: int, db: Session = Depends(get_db), _=Depends(check_admin)):
+async def delete_showtime(showtime_id: int, db: Session = Depends(get_db)):
     """
     Delete a showtime by ID.
 
@@ -539,7 +513,7 @@ async def delete_showtime(showtime_id: int, db: Session = Depends(get_db), _=Dep
 
 
 @router.get("/users", response_model=List[UserResponse])
-async def get_users_with_reservations(db: Session = Depends(get_db), _=Depends(check_admin)):
+async def get_users_with_reservations(db: Session = Depends(get_db)):
     """
     Retrieve a list of user who have made reservation.
 

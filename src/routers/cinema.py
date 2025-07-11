@@ -33,28 +33,6 @@ async def get_cinemas(db: Session = Depends(get_db)):
     return cinemas
 
 
-@router.get("/{cinema_id}", response_model=CinemaResponse)
-async def get_cinema(cinema_id: int, db: Session = Depends(get_db)):
-    """
-    Get a specific cinema by ID.
-
-    Args:
-        cinema_id: ID of the cinema.
-        db: Database session.
-
-    Returns:
-        Cinema details with associated halls.
-
-    Raises:
-        HTTPException: If cinema is not found.
-    """
-    cinema = db.query(Cinema).filter(Cinema.id == cinema_id).first()
-    if not cinema:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Cinema not found")
-    return cinema
-
-
 @router.get("/{cinema_id}/halls", response_model=List[HallResponse])
 async def get_cinema_halls(cinema_id: int, db: Session = Depends(get_db)):
     """

@@ -6,9 +6,8 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from .auth import get_current_user
 from ..database import get_db
-from ..models import Hall, Showtime, Cinema, User
+from ..models import Hall, Showtime, Cinema
 from ..schemas import HallResponse, ShowtimeResponse
 
 router = APIRouter(tags=["hall"])
@@ -17,8 +16,7 @@ router = APIRouter(tags=["hall"])
 @router.get("/{cinema_id}/hall", response_model=List[HallResponse])
 async def get_hall_with_showtimes(
     cinema_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
     """
     Retrieve a list of all cinema hall for a specific cinema with their current showtimes
@@ -51,8 +49,7 @@ async def get_hall_with_showtimes(
     for hall in halls:
         showtimes = db.query(Showtime).filter(
             Showtime.hall_id == hall.id,
-            Showtime.start_time <= current_time,
-            Showtime.end_time >= current_time
+            Showtime.start_time >= current_time
         ).all()
         hall_data = HallResponse(
             id=hall.id,
