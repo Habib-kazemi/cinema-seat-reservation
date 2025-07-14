@@ -2,16 +2,14 @@
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
+from src.config.settings import settings
 
-DATABASE_URL = "postgresql://postgres:password@localhost/cinema_db"
-
-engine = create_engine(DATABASE_URL)
+engine = create_engine(settings.DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
 def get_db():
-    """Provide a database session."""
     db = SessionLocal()
     try:
         yield db

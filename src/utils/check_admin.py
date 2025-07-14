@@ -1,6 +1,7 @@
 from fastapi import Depends, HTTPException, status
-from src.routers.auth import get_current_user
-from src.models import User, Role
+from src.features.auth.services import get_current_user
+from src.features.users.schemas import Role
+from src.features.users.models import User
 
 
 def check_admin(user: User = Depends(get_current_user)):
