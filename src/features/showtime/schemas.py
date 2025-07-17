@@ -1,7 +1,6 @@
 from datetime import datetime
-from typing import Dict
-from pydantic import BaseModel
-from pydantic import field_serializer
+from pydantic import BaseModel, field_validator, field_serializer
+from src.features.movie.schemas import MovieResponse
 
 
 class ShowtimeBase(BaseModel):
@@ -13,12 +12,18 @@ class ShowtimeBase(BaseModel):
 
 
 class ShowtimeCreate(ShowtimeBase):
-    pass
+    @field_validator('end_time')
+    @classmethod
+    def validate_end_time(cls, end_time: datetime, values) -> datetime:
+        start_time = values.data.get('start_time')
+        if start_time and end_time <= start_time:
+            raise ValueError('End time must be after start time')
+        return end_time
 
 
 class ShowtimeResponse(ShowtimeBase):
     id: int
-    movie: Dict
+    movie: MovieResponse
 
     class Config:
         from_attributes = True

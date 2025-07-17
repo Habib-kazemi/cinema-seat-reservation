@@ -8,7 +8,7 @@ from .schemas import Status
 class Reservation(Base):
     __tablename__ = "reservation"
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     showtime_id = Column(Integer, ForeignKey("showtime.id"), nullable=False)
     seat_number = Column(String(10), nullable=False)
     price = Column(Numeric(10, 2), nullable=False)

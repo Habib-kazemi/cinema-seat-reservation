@@ -1,3 +1,4 @@
+from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from src.features.cinema.models import Cinema
@@ -12,7 +13,6 @@ from src.features.movie.schemas import MovieCreate, MovieResponse
 from src.features.showtime.schemas import ShowtimeCreate, ShowtimeResponse
 from src.features.users.schemas import UserResponse
 from src.features.reservation.schemas import ReservationResponse
-from typing import List, Optional
 
 
 def create_cinema(cinema: CinemaCreate, db: Session):
@@ -245,3 +245,33 @@ def get_users_with_reservations(db: Session) -> List[UserResponse]:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="No user with reservation found")
     return users
+
+
+def approve_reservation(reservation_id: int, db: Session) -> ReservationResponse:
+    reservation = db.query(Reservation).filter(
+        Reservation.id == reservation_id).first()
+    if not reservation:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Reservation not found")
+    if reservation.status == Status.CONFIRMED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Reservation already confirmed")
+    reservation.status = Status.CONFIRMED
+    db.commit()
+    db.refresh(reservation)
+    return reservation
+
+
+def reject_reservation(reservation_id: int, db: Session) -> ReservationResponse:
+    reservation = db.query(Reservation).filter(
+        Reservation.id == reservation_id).first()
+    if not reservation:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Reservation not found")
+    if reservation.status == Status.CANCELED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Reservation already canceled")
+    reservation.status = Status.CANCELED
+    db.commit()
+    db.refresh(reservation)
+    return reservation

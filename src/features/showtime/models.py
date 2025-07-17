@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, ForeignKey, DateTime, Numeric
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql.schema import UniqueConstraint
 from src.database import Base
 
 
@@ -14,3 +15,8 @@ class Showtime(Base):
     movie = relationship("Movie", back_populates="showtime")
     hall = relationship("Hall", back_populates="showtime")
     reservation = relationship("Reservation", back_populates="showtime")
+
+    __table_args__ = (
+        UniqueConstraint('movie_id', 'hall_id', 'start_time',
+                         name='unique_showtime'),
+    )

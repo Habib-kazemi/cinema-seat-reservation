@@ -1,11 +1,11 @@
+from typing import List
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from .models import Cinema
-from .schemas import CinemaResponse
 from src.features.hall.models import Hall
 from src.features.showtime.models import Showtime
 from src.features.movie.models import Movie
-from typing import List
+from .models import Cinema
+from .schemas import CinemaResponse
 
 
 def get_cinemas(db: Session) -> List[CinemaResponse]:

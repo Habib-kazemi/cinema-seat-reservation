@@ -1,11 +1,11 @@
+from typing import List
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from .models import Reservation, Status
-from .schemas import ReservationCreate, ReservationResponse, ReservationCancelResponse
 from src.features.showtime.models import Showtime
 from src.features.hall.models import Hall
 from src.features.users.models import User
-from typing import List
+from .models import Reservation, Status
+from .schemas import ReservationCreate, ReservationResponse
 
 
 def create_reservation(reservation: ReservationCreate, current_user: User, db: Session):
@@ -91,33 +91,3 @@ def get_user_reservations(current_user: User, db: Session) -> List[ReservationRe
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="No reservation found")
     return reservations
-
-
-def approve_reservation(reservation_id: int, db: Session):
-    reservation = db.query(Reservation).filter(
-        Reservation.id == reservation_id).first()
-    if not reservation:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Reservation not found")
-    if reservation.status != Status.PENDING:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Reservation is not pending")
-    reservation.status = Status.CONFIRMED
-    db.commit()
-    db.refresh(reservation)
-    return reservation
-
-
-def reject_reservation(reservation_id: int, db: Session):
-    reservation = db.query(Reservation).filter(
-        Reservation.id == reservation_id).first()
-    if not reservation:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Reservation not found")
-    if reservation.status != Status.PENDING:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Reservation is not pending")
-    reservation.status = Status.CANCELED
-    db.commit()
-    db.refresh(reservation)
-    return reservation

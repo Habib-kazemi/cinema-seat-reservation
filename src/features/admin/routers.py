@@ -13,7 +13,7 @@ from .services import (
     create_cinema, delete_cinema, create_hall, update_hall, partial_update_hall, delete_hall,
     create_movie, update_movie, partial_update_movie, delete_movie,
     create_showtime, update_showtime, partial_update_showtime, delete_showtime,
-    get_users_with_reservations
+    get_users_with_reservations, approve_reservation, reject_reservation
 )
 
 router = APIRouter(tags=["admin"], dependencies=[Depends(check_admin)])
