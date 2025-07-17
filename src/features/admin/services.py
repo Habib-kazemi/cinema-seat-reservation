@@ -7,10 +7,10 @@ from src.features.movie.models import Movie
 from src.features.showtime.models import Showtime
 from src.features.users.models import User
 from src.features.reservation.models import Reservation, Status
-from src.features.cinema.schemas import CinemaCreate, CinemaResponse
-from src.features.hall.schemas import HallCreate, HallResponse
-from src.features.movie.schemas import MovieCreate, MovieResponse
-from src.features.showtime.schemas import ShowtimeCreate, ShowtimeResponse
+from src.features.cinema.schemas import CinemaCreate
+from src.features.hall.schemas import HallCreate
+from src.features.movie.schemas import MovieCreate
+from src.features.showtime.schemas import ShowtimeCreate
 from src.features.users.schemas import UserResponse
 from src.features.reservation.schemas import ReservationResponse
 
@@ -28,9 +28,15 @@ def delete_cinema(cinema_id: int, db: Session):
     if not cinema:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Cinema not found")
-    db.delete(cinema)
-    db.commit()
-    return {"message": "Cinema deleted successfully"}
+    dependent_halls = db.query(Hall).filter(
+        Hall.cinema_id == cinema_id).first()
+    if dependent_halls:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete cinema because it has associated halls")
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Deletion not allowed; please remove dependent halls first")
 
 
 def create_hall(hall: HallCreate, db: Session):
@@ -114,9 +120,15 @@ def delete_hall(hall_id: int, db: Session):
     if not hall:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Hall not found")
-    db.delete(hall)
-    db.commit()
-    return {"message": "Hall deleted successfully"}
+    dependent_showtimes = db.query(Showtime).filter(
+        Showtime.hall_id == hall_id).first()
+    if dependent_showtimes:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete hall because it has associated showtimes")
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Deletion not allowed; please remove dependent showtimes first")
 
 
 def create_movie(movie: MovieCreate, db: Session):
@@ -175,9 +187,15 @@ def delete_movie(movie_id: int, db: Session):
     if not movie:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
-    db.delete(movie)
-    db.commit()
-    return {"message": "Movie deleted successfully"}
+    dependent_showtimes = db.query(Showtime).filter(
+        Showtime.movie_id == movie_id).first()
+    if dependent_showtimes:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete movie because it has associated showtimes")
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Deletion not allowed; please remove dependent showtimes first")
 
 
 def create_showtime(showtime: ShowtimeCreate, db: Session):
@@ -233,9 +251,15 @@ def delete_showtime(showtime_id: int, db: Session):
     if not showtime:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Showtime not found")
-    db.delete(showtime)
-    db.commit()
-    return {"message": "Showtime deleted successfully"}
+    dependent_reservations = db.query(Reservation).filter(
+        Reservation.showtime_id == showtime_id).first()
+    if dependent_reservations:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete showtime because it has associated reservations")
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Deletion not allowed; please remove dependent reservations first")
 
 
 def get_users_with_reservations(db: Session) -> List[UserResponse]:
