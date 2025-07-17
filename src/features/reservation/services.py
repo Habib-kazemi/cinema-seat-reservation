@@ -14,9 +14,10 @@ def create_reservation(reservation: ReservationCreate, current_user: User, db: S
     if not showtime:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Showtime not found")
+    seat_number_upper = reservation.seat_number.upper()
     existing_reservation = db.query(Reservation).filter(
         Reservation.showtime_id == reservation.showtime_id,
-        Reservation.seat_number == reservation.seat_number,
+        Reservation.seat_number == seat_number_upper,
     ).first()
     if existing_reservation:
         raise HTTPException(
@@ -26,8 +27,8 @@ def create_reservation(reservation: ReservationCreate, current_user: User, db: S
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Hall not found")
     try:
-        row_letter = reservation.seat_number[0].upper()
-        col_number = int(reservation.seat_number[1:])
+        row_letter = seat_number_upper[0]
+        col_number = int(seat_number_upper[1:])
         row_index = ord(row_letter) - ord('A') + 1
         if row_index < 1 or row_index > hall.rows or col_number < 1 or col_number > hall.columns:
             raise HTTPException(
@@ -38,7 +39,7 @@ def create_reservation(reservation: ReservationCreate, current_user: User, db: S
     db_reservation = Reservation(
         user_id=current_user.id,
         showtime_id=reservation.showtime_id,
-        seat_number=reservation.seat_number,
+        seat_number=seat_number_upper,
         price=showtime.price,
         status=Status.PENDING
     )
@@ -73,7 +74,8 @@ def get_available_seats(showtime_id: int, db: Session):
             status_code=status.HTTP_404_NOT_FOUND, detail="Hall not found")
     reserved_seats = db.query(Reservation).filter(
         Reservation.showtime_id == showtime_id).all()
-    reserved_seats = {seat.seat_number for seat in reserved_seats}
+    reserved_seats = {seat.seat_number.upper()
+                      for seat in reserved_seats}
     available_seats = []
     for row in range(1, hall.rows + 1):
         row_letter = chr(ord('A') + row - 1)
