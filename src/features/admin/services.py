@@ -23,6 +23,37 @@ def create_cinema(cinema: CinemaCreate, db: Session):
     return db_cinema
 
 
+def update_cinema(cinema_id: int, cinema: CinemaCreate, db: Session):
+    db_cinema = db.query(Cinema).filter(Cinema.id == cinema_id).first()
+    if not db_cinema:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Cinema not found")
+    for key, value in cinema.model_dump().items():
+        setattr(db_cinema, key, value)
+    db.commit()
+    db.refresh(db_cinema)
+    return db_cinema
+
+
+def partial_update_cinema(
+    cinema_id: int,
+    name: Optional[str],
+    address: Optional[str],
+    db: Session
+):
+    db_cinema = db.query(Cinema).filter(Cinema.id == cinema_id).first()
+    if not db_cinema:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Cinema not found")
+    if name is not None:
+        db_cinema.name = name
+    if address is not None:
+        db_cinema.address = address
+    db.commit()
+    db.refresh(db_cinema)
+    return db_cinema
+
+
 def delete_cinema(cinema_id: int, db: Session):
     cinema = db.query(Cinema).filter(Cinema.id == cinema_id).first()
     if not cinema:

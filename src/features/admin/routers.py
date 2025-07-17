@@ -10,7 +10,8 @@ from src.features.showtime.schemas import ShowtimeCreate, ShowtimeResponse
 from src.features.users.schemas import UserResponse
 from src.features.reservation.schemas import ReservationResponse
 from .services import (
-    create_cinema, delete_cinema, create_hall, update_hall, partial_update_hall, delete_hall,
+    create_cinema, delete_cinema, update_cinema, partial_update_cinema,
+    create_hall, update_hall, partial_update_hall, delete_hall,
     create_movie, update_movie, partial_update_movie, delete_movie,
     create_showtime, update_showtime, partial_update_showtime, delete_showtime,
     get_users_with_reservations, approve_reservation, reject_reservation
@@ -22,6 +23,21 @@ router = APIRouter(tags=["admin"], dependencies=[Depends(check_admin)])
 @router.post("/cinema", response_model=CinemaResponse, status_code=status.HTTP_201_CREATED)
 async def create_cinema_endpoint(cinema: CinemaCreate, db: Session = Depends(get_db)):
     return create_cinema(cinema, db)
+
+
+@router.put("/cinema/{cinema_id}", response_model=CinemaResponse)
+async def update_cinema_endpoint(cinema_id: int, cinema: CinemaCreate, db: Session = Depends(get_db)):
+    return update_cinema(cinema_id, cinema, db)
+
+
+@router.patch("/cinema/{cinema_id}", response_model=CinemaResponse)
+async def partial_update_cinema_endpoint(
+    cinema_id: int,
+    name: Optional[str] = None,
+    address: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    return partial_update_cinema(cinema_id, name, address, db)
 
 
 @router.delete("/cinema/{cinema_id}", response_model=dict)
