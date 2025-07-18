@@ -73,7 +73,9 @@ def get_available_seats(showtime_id: int, db: Session):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Hall not found")
     reserved_seats = db.query(Reservation).filter(
-        Reservation.showtime_id == showtime_id).all()
+        Reservation.showtime_id == showtime_id,
+        Reservation.status == Status.CONFIRMED  # Only consider confirmed reservations
+    ).all()
     reserved_seats = {seat.seat_number.upper()
                       for seat in reserved_seats}
     available_seats = []
