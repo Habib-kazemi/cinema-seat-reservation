@@ -1,5 +1,6 @@
+from datetime import datetime
 from typing import List, Optional
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
 from src.database import get_db
 from src.utils.check_admin import check_admin
@@ -14,7 +15,8 @@ from .services import (
     create_hall, update_hall, partial_update_hall, delete_hall,
     create_movie, update_movie, partial_update_movie, delete_movie,
     create_showtime, update_showtime, partial_update_showtime, delete_showtime,
-    get_users_with_reservations, approve_reservation, reject_reservation
+    get_users_with_reservations, approve_reservation, reject_reservation,
+    get_total_sales
 )
 
 router = APIRouter(tags=["admin"], dependencies=[Depends(check_admin)])
@@ -132,6 +134,20 @@ async def delete_showtime_endpoint(showtime_id: int, db: Session = Depends(get_d
 @router.get("/users", response_model=List[UserResponse])
 async def get_users_with_reservations_endpoint(db: Session = Depends(get_db)):
     return get_users_with_reservations(db)
+
+
+@router.get("/total_sales", response_model=dict)
+async def get_total_sales_endpoint(
+    db: Session = Depends(get_db),
+    cinema_id: Optional[int] = Query(None, description="Filter by cinema ID"),
+    showtime_id: Optional[int] = Query(
+        None, description="Filter by showtime ID"),
+    start_date: Optional[datetime] = Query(
+        None, description="Filter by start date"),
+    end_date: Optional[datetime] = Query(
+        None, description="Filter by end date")
+):
+    return get_total_sales(db, cinema_id, showtime_id, start_date, end_date)
 
 
 @router.post("/reservation/{reservation_id}/approve", response_model=ReservationResponse)

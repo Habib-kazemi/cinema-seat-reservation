@@ -1,6 +1,8 @@
+from datetime import datetime
 from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 from src.features.cinema.models import Cinema
 from src.features.hall.models import Hall
 from src.features.movie.models import Movie
@@ -300,6 +302,36 @@ def get_users_with_reservations(db: Session) -> List[UserResponse]:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="No user with reservation found")
     return users
+
+
+def get_total_sales(
+    db: Session,
+    cinema_id: Optional[int] = None,
+    showtime_id: Optional[int] = None,
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None
+) -> dict:
+    query = db.query(func.sum(Reservation.price)).filter(
+        Reservation.status == Status.CONFIRMED
+    )
+    if cinema_id:
+        query = query.join(Showtime, Reservation.showtime_id == Showtime.id
+                           ).join(Hall, Showtime.hall_id == Hall.id
+                                  ).filter(Hall.cinema_id == cinema_id)
+        if not db.query(Cinema).filter(Cinema.id == cinema_id).first():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Cinema not found")
+    if showtime_id:
+        query = query.filter(Reservation.showtime_id == showtime_id)
+        if not db.query(Showtime).filter(Showtime.id == showtime_id).first():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Showtime not found")
+    if start_date:
+        query = query.filter(Reservation.created_at >= start_date)
+    if end_date:
+        query = query.filter(Reservation.created_at <= end_date)
+    total = query.scalar() or 0.0
+    return {"total_sales": float(total)}
 
 
 def approve_reservation(reservation_id: int, db: Session) -> ReservationResponse:
