@@ -9,6 +9,10 @@ from src.features.admin.routers import router as admin_router
 from src.features.auth.routers import router as auth_router
 from src.features.cinema.routers import router as cinema_router
 from src import models
+from src.config.logging_config import setup_logging
+
+# Setup logging
+logger = setup_logging()
 
 app = FastAPI(title="Cinema Seat Reservation API")
 
@@ -23,6 +27,7 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
+    logger.info("Root endpoint accessed")
     return {"message": "Welcome to Cinema Seat Reservation API. Visit /docs for API documentation."}
 
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])

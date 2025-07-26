@@ -11,6 +11,7 @@ services:
       - ENVIRONMENT=development
     volumes:
       - ./src:/app/src
+      - ./src/logs:/app/src/logs
     networks:
       - cinema-network
     command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
