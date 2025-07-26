@@ -13,3 +13,5 @@ class Movie(Base):
     description = Column(Text)
     poster_url = Column(String(255))
     showtime = relationship("Showtime", back_populates="movie")
+    genre = relationship("Genre", back_populates="movies",
+                         foreign_keys=[genre_id])

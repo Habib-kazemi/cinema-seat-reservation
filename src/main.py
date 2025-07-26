@@ -8,6 +8,7 @@ from src.features.reservation.routers import router as reservation_router
 from src.features.admin.routers import router as admin_router
 from src.features.auth.routers import router as auth_router
 from src.features.cinema.routers import router as cinema_router
+from src import models
 
 app = FastAPI(title="Cinema Seat Reservation API")
 
