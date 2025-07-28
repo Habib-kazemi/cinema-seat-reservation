@@ -18,5 +18,6 @@ async def get_movies_endpoint(
     release_date_lte: Optional[date] = None,
     db: Session = Depends(get_db)
 ):
-    {release_date_gte}, release_date_lte = {release_date_lte}")
+    logger.info(
+        f"Fetching movies with filters: genre_id={genre_id}, release_date_gte={release_date_gte}, release_date_lte={release_date_lte}")
     return get_movies(genre_id, release_date_gte, release_date_lte, db)
