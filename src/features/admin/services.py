@@ -4,7 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from src.features.cinema.models import Cinema
-from src.features.hall.models import Hall
+from src.features.hall.models import Hall, Hall_position
 from src.features.movie.models import Movie
 from src.features.showtime.models import Showtime
 from src.features.users.models import User
@@ -89,6 +89,7 @@ def create_hall(hall: HallCreate, db: Session):
     db.add(db_hall)
     db.commit()
     db.refresh(db_hall)
+    create_hall_positions(db_hall, db)
     return db_hall
 
 
@@ -108,8 +109,9 @@ def update_hall(hall_id: int, hall: HallCreate, db: Session):
     db_hall.rows = hall.rows
     db_hall.columns = hall.columns
     db_hall.cinema_id = hall.cinema_id
+    db.query(Hall_position).filter(Hall_position.hall_id == hall_id).delete()
     db.commit()
-    db.refresh(db_hall)
+    create_hall_positions(db_hall, db)
     return db_hall
 
 
@@ -143,8 +145,9 @@ def partial_update_hall(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Cinema not found")
         db_hall.cinema_id = cinema_id
+    db.query(Hall_position).filter(Hall_position.hall_id == hall_id).delete()
     db.commit()
-    db.refresh(db_hall)
+    create_hall_positions(db_hall, db)
     return db_hall
 
 
@@ -159,9 +162,20 @@ def delete_hall(hall_id: int, db: Session):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot delete hall because it has associated showtimes")
-    raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="Deletion not allowed; please remove dependent showtimes first")
+    dependent_reservations = db.query(Reservation).join(
+        Showtime).filter(Showtime.hall_id == hall_id).first()
+    if dependent_reservations:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Cannot delete hall because it has associated reservations")
+
+
+def create_hall_positions(hall: Hall, db: Session):
+    for row in range(1, hall.rows + 1):
+        for col in range(1, hall.columns + 1):
+            position = Hall_position(
+                hall_id=hall.id, row_index=row, column_index=col)
+            db.add(position)
+    db.commit()
 
 
 def create_movie(movie: MovieCreate, db: Session):

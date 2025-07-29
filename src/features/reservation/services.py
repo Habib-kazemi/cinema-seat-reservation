@@ -2,7 +2,7 @@ from typing import List
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from src.features.showtime.models import Showtime
-from src.features.hall.models import Hall
+from src.features.hall.models import Hall, Hall_position
 from src.features.users.models import User
 from .models import Reservation, Status
 from .schemas import ReservationCreate, ReservationResponse
@@ -14,33 +14,30 @@ def create_reservation(reservation: ReservationCreate, current_user: User, db: S
     if not showtime:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Showtime not found")
-    seat_number_upper = reservation.seat_number.upper()
+    position = db.query(Hall_position).filter(
+        Hall_position.hall_id == showtime.hall_id,
+        Hall_position.row_index == reservation.row_index,
+        Hall_position.column_index == reservation.column_index
+    ).first()
+    if not position:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid seat position")
+    if reservation.row_index < 1 or reservation.row_index > showtime.hall.rows or reservation.column_index < 1 or reservation.column_index > showtime.hall.columns:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid seat position")
     existing_reservation = db.query(Reservation).filter(
         Reservation.showtime_id == reservation.showtime_id,
-        Reservation.seat_number == seat_number_upper,
+        Reservation.position_id == position.id,
+        Reservation.status != Status.CANCELED
     ).first()
     if existing_reservation:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Seat already reserved")
-    hall = db.query(Hall).filter(Hall.id == showtime.hall_id).first()
-    if not hall:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Hall not found")
-    try:
-        row_letter = seat_number_upper[0]
-        col_number = int(seat_number_upper[1:])
-        row_index = ord(row_letter) - ord('A') + 1
-        if row_index < 1 or row_index > hall.rows or col_number < 1 or col_number > hall.columns:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid seat number")
-    except (ValueError, IndexError) as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Invalid seat number format") from exc
     db_reservation = Reservation(
         user_id=current_user.id,
         showtime_id=reservation.showtime_id,
-        seat_number=seat_number_upper,
-        price=showtime.price,
+        position_id=position.id,
+        price=reservation.price,
         status=Status.PENDING
     )
     db.add(db_reservation)
@@ -58,7 +55,7 @@ def cancel_reservation(reservation_id: int, current_user: User, db: Session):
     if reservation.user_id != current_user.id and current_user.role != "ADMIN":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Not authorized to cancel this reservation")
-    db.delete(reservation)
+    reservation.status = Status.CANCELED
     db.commit()
     return {"message": "Reservation cancelled successfully"}
 
@@ -72,20 +69,22 @@ def get_available_seats(showtime_id: int, db: Session):
     if not hall:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Hall not found")
-    reserved_seats = db.query(Reservation).filter(
+    reserved_positions = db.query(Reservation.position_id).filter(
         Reservation.showtime_id == showtime_id,
-        Reservation.status == Status.CONFIRMED  # Only consider confirmed reservations
+        Reservation.status != Status.CANCELED
     ).all()
-    reserved_seats = {seat.seat_number.upper()
-                      for seat in reserved_seats}
-    available_seats = []
-    for row in range(1, hall.rows + 1):
-        row_letter = chr(ord('A') + row - 1)
-        for col in range(1, hall.columns + 1):
-            seat_number = f"{row_letter}{col}"
-            if seat_number not in reserved_seats:
-                available_seats.append(seat_number)
-    return {"showtime_id": showtime_id, "available_seats": available_seats}
+    reserved_position_ids = [pos_id for (pos_id,) in reserved_positions]
+    available_positions = db.query(Hall_position).filter(
+        Hall_position.hall_id == showtime.hall_id,
+        ~Hall_position.id.in_(reserved_position_ids)
+    ).all()
+    return {
+        "showtime_id": showtime_id,
+        "available_seats": [
+            {"row_index": pos.row_index, "column_index": pos.column_index}
+            for pos in available_positions
+        ]
+    }
 
 
 def get_user_reservations(current_user: User, db: Session) -> List[ReservationResponse]:

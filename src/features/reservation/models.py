@@ -10,9 +10,11 @@ class Reservation(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     showtime_id = Column(Integer, ForeignKey("showtime.id"), nullable=False)
-    seat_number = Column(String(10), nullable=False)
+    position_id = Column(Integer, ForeignKey(
+        "hall_position.id"), nullable=False)
     price = Column(Numeric(10, 2), nullable=False)
     status = Column(String(20), nullable=False)
     created_at = Column(DateTime, server_default=now())
     user = relationship("User", back_populates="reservation")
     showtime = relationship("Showtime", back_populates="reservation")
+    position = relationship("Hall_position")

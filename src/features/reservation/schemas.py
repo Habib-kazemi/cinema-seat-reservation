@@ -1,7 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel
-from pydantic import field_serializer
+from pydantic import BaseModel, field_serializer
 
 
 class Status(str, Enum):
@@ -12,7 +11,8 @@ class Status(str, Enum):
 
 class ReservationBase(BaseModel):
     showtime_id: int
-    seat_number: str
+    row_index: int
+    column_index: int
 
 
 class ReservationCreate(ReservationBase):
@@ -22,6 +22,7 @@ class ReservationCreate(ReservationBase):
 class ReservationResponse(ReservationBase):
     id: int
     user_id: int
+    position_id: int
     price: float
     created_at: datetime
     status: Status
