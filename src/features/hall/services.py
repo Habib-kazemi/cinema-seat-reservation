@@ -3,6 +3,8 @@ from typing import List
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from src.features.cinema.models import Cinema
+from src.features.showtime.models import Showtime
+from src.features.showtime.schemas import ShowtimeResponse
 from .models import Hall
 from .schemas import HallResponse
 
