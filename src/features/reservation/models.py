@@ -1,8 +1,9 @@
-from sqlalchemy import Column, Integer, String, Numeric, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, Numeric, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.functions import now
 from src.database import Base
 from .schemas import Status
+from src.features.users.models import User
 
 
 class Reservation(Base):
@@ -13,7 +14,7 @@ class Reservation(Base):
     position_id = Column(Integer, ForeignKey(
         "hall_position.id"), nullable=False)
     price = Column(Numeric(10, 2), nullable=False)
-    status = Column(String(20), nullable=False)
+    status = Column(Enum(Status), nullable=False, default=Status.PENDING)
     created_at = Column(DateTime, server_default=now())
     user = relationship("User", back_populates="reservation")
     showtime = relationship("Showtime", back_populates="reservation")

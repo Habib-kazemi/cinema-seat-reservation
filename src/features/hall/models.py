@@ -1,6 +1,8 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from src.database import Base
+from src.features.cinema.models import Cinema
+from src.features.showtime.models import Showtime
 
 
 class Hall(Base):
@@ -10,8 +12,9 @@ class Hall(Base):
     name = Column(String(100), nullable=False)
     rows = Column(Integer, nullable=False)
     columns = Column(Integer, nullable=False)
-    cinema = relationship("Cinema", back_populates="halls")
+    cinema = relationship("Cinema", back_populates="hall")
     positions = relationship("Hall_position", back_populates="hall")
+    showtime = relationship("Showtime", back_populates="hall")
 
 
 class Hall_position(Base):

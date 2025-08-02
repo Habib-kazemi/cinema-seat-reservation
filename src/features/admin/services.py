@@ -162,11 +162,6 @@ def delete_hall(hall_id: int, db: Session):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot delete hall because it has associated showtimes")
-    dependent_reservations = db.query(Reservation).join(
-        Showtime).filter(Showtime.hall_id == hall_id).first()
-    if dependent_reservations:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Cannot delete hall because it has associated reservations")
 
 
 def create_hall_positions(hall: Hall, db: Session):
@@ -246,6 +241,26 @@ def delete_movie(movie_id: int, db: Session):
 
 
 def create_showtime(showtime: ShowtimeCreate, db: Session):
+
+    movie = db.query(Movie).filter(Movie.id == showtime.movie_id).first()
+    if not movie:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
+
+    hall = db.query(Hall).filter(Hall.id == showtime.hall_id).first()
+    if not hall:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Hall not found")
+
+    existing_showtime = db.query(Showtime).filter(
+        Showtime.hall_id == showtime.hall_id,
+        Showtime.start_time <= showtime.end_time,
+        Showtime.end_time >= showtime.start_time
+    ).first()
+    if existing_showtime:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Hall is already booked for this time slot")
     db_showtime = Showtime(**showtime.model_dump())
     db.add(db_showtime)
     db.commit()

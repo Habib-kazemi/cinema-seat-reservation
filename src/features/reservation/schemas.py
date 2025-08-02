@@ -22,7 +22,6 @@ class ReservationCreate(ReservationBase):
 class ReservationResponse(ReservationBase):
     id: int
     user_id: int
-    position_id: int
     price: float
     created_at: datetime
     status: Status

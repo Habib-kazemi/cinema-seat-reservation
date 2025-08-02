@@ -2,6 +2,8 @@ from sqlalchemy import Column, Integer, ForeignKey, DateTime, Numeric
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.schema import UniqueConstraint
 from src.database import Base
+from src.features.movie.models import Movie
+from src.features.reservation.models import Reservation
 
 
 class Showtime(Base):

@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, field_validator, field_serializer
-from src.features.movie.schemas import MovieResponse
+from src.features.movie.schemas import MovieResponseSimple
 
 
 class ShowtimeBase(BaseModel):
@@ -23,7 +23,7 @@ class ShowtimeCreate(ShowtimeBase):
 
 class ShowtimeResponse(ShowtimeBase):
     id: int
-    movie: MovieResponse
+    movie: MovieResponseSimple
 
     class Config:
         from_attributes = True

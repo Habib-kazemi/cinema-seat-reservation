@@ -1,7 +1,6 @@
 from datetime import date
 from typing import Optional
-from pydantic import BaseModel
-from pydantic import field_serializer
+from pydantic import BaseModel, field_serializer
 
 
 class MovieBase(BaseModel):
@@ -31,3 +30,8 @@ class MovieResponse(MovieBase):
     @field_serializer('release_date')
     def serialize_date(self, dt: date) -> str:
         return dt.isoformat()
+
+
+class MovieResponseSimple(MovieBase):
+    class Config:
+        from_attributes = True

@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Date, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from src.database import Base
+from src.features.genre.models import Genre
 
 
 class Movie(Base):
@@ -13,5 +14,5 @@ class Movie(Base):
     description = Column(Text)
     poster_url = Column(String(255))
     showtime = relationship("Showtime", back_populates="movie")
-    genre = relationship("Genre", back_populates="movies",
+    genre = relationship("Genre", back_populates="movie",
                          foreign_keys=[genre_id])
