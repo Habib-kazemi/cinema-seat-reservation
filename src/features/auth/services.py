@@ -8,6 +8,7 @@ from src.features.users.models import User
 from src.features.users.schemas import UserCreate, Role
 from src.config.settings import settings
 from src.database import get_db
+from src.utils.is_valid_role import is_valid_role
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
@@ -21,10 +22,16 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         email: str | None = payload.get("sub")
-        if email is None:
+        role: str | None = payload.get("role")
+        if email is None or role is None:
             raise credentials_exception
+        if not is_valid_role(role):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid role",
+            )
         user = db.query(User).filter(User.email == email).first()
-        if user is None:
+        if user is None or user.role != role:
             raise credentials_exception
         return user
     except JWTError as exc:
@@ -51,6 +58,9 @@ def register_user(user: UserCreate, db: Session):
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+    if not is_valid_role(user.role):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid role")
     db_user = User(
         email=user.email,
         password_hash=hash_password(user.password),

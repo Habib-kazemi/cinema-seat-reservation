@@ -1,5 +1,5 @@
-from pydantic import BaseModel
 from typing import List
+from pydantic import BaseModel
 from src.features.showtime.schemas import ShowtimeResponse
 
 

@@ -2,6 +2,7 @@ from typing import List
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import not_
+from src.utils.is_valid_role import Role
 from src.features.showtime.models import Showtime
 from src.features.hall.models import Hall, Hall_position
 from src.features.users.models import User
@@ -62,7 +63,7 @@ def cancel_reservation(reservation_id: int, current_user: User, db: Session):
     if not reservation:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Reservation not found")
-    if reservation.user_id != current_user.id and current_user.role != "ADMIN":
+    if reservation.user_id != current_user.id and current_user.role != Role.ADMIN.value:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Not authorized to cancel this reservation")
     reservation.status = Status.CANCELED
@@ -100,7 +101,7 @@ def get_available_seats(showtime_id: int, db: Session):
 def get_user_reservations(current_user: User, db: Session) -> List[ReservationResponse]:
     query = db.query(Reservation).join(
         Hall_position, Reservation.position_id == Hall_position.id)
-    if current_user.role != "ADMIN":
+    if current_user.role != Role.ADMIN.value:
         query = query.filter(Reservation.user_id == current_user.id)
     reservations = query.all()
     if not reservations:

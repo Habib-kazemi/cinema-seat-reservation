@@ -1,7 +1,7 @@
-from sqlalchemy.orm import Session
-from .models import Movie
 from datetime import date
 from typing import Optional
+from sqlalchemy.orm import Session
+from .models import Movie
 
 
 def get_movies(genre_id: Optional[int], release_date_gte: Optional[date], release_date_lte: Optional[date], db: Session):
