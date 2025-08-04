@@ -12,5 +12,8 @@ logger = logging.getLogger(__name__)
 
 @router.get("/{cinema_id}/hall", response_model=List[HallResponse])
 async def get_hall_with_showtimes_endpoint(cinema_id: int, db: Session = Depends(get_db)):
-    logger.info(f"Fetching halls with showtimes for cinema ID: {cinema_id}")
-    return get_hall_with_showtimes(cinema_id, db)
+    logger.info("Fetching halls with showtimes for cinema ID: %s", cinema_id)
+    result = get_hall_with_showtimes(cinema_id, db)
+    logger.info("Fetched %s halls with showtimes for cinema ID: %s",
+                len(result), cinema_id)
+    return result

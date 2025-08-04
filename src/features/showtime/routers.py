@@ -17,6 +17,8 @@ async def get_showtimes_endpoint(
     showtime_date: Optional[date] = None,
     db: Session = Depends(get_db)
 ):
-    logger.info(
-        f"Fetching showtimes with filters: movie_id={movie_id}, showtime_date={showtime_date}")
-    return get_showtimes(movie_id, showtime_date, db)
+    logger.info("Fetching showtimes with filters: movie_id=%s, showtime_date=%s",
+                movie_id, showtime_date)
+    result = get_showtimes(movie_id, showtime_date, db)
+    logger.info("Fetched %s showtimes", len(result))
+    return result
