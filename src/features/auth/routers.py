@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from src.database import get_db
-from src.features.users.schemas import UserCreate
+from src.features.user.schemas import UserCreate
 from .services import register_user, login_user
 from .schemas import Token
 

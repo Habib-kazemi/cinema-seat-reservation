@@ -1,5 +1,5 @@
 import logging
 from fastapi import APIRouter
 
-router = APIRouter(tags=["users"])
+router = APIRouter(tags=["user"])
 logger = logging.getLogger(__name__)

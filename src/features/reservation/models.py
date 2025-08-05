@@ -3,13 +3,13 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql.functions import now
 from src.database import Base
 from .schemas import Status
-from src.features.users.models import User
+from src.features.user.models import User
 
 
 class Reservation(Base):
     __tablename__ = "reservation"
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     showtime_id = Column(Integer, ForeignKey("showtime.id"), nullable=False)
     position_id = Column(Integer, ForeignKey(
         "hall_position.id"), nullable=False)

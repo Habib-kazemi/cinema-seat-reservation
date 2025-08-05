@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, status
 from src.features.auth.services import get_current_user
 from src.utils.is_valid_role import Role
-from src.features.users.models import User
+from src.features.user.models import User
 
 
 def check_admin(user: User = Depends(get_current_user)):

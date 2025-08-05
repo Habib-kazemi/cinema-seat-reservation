@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.features.users.routers import router as user_router
+from src.features.user.routers import router as user_router
 from src.features.movie.routers import router as movie_router
 from src.features.showtime.routers import router as showtime_router
 from src.features.hall.routers import router as hall_router
@@ -31,7 +31,7 @@ async def root():
     return {"message": "Welcome to Cinema Seat Reservation API. Visit /docs for API documentation."}
 
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
-app.include_router(user_router, prefix="/api/v1/users", tags=["users"])
+app.include_router(user_router, prefix="/api/v1/user", tags=["user"])
 app.include_router(movie_router, prefix="/api/v1/movie", tags=["movie"])
 app.include_router(
     showtime_router, prefix="/api/v1/showtime", tags=["showtime"])

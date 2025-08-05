@@ -2,7 +2,7 @@ import logging
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from src.database import get_db
-from src.features.users.models import User
+from src.features.user.models import User
 from src.features.auth.services import get_current_user
 from .services import create_reservation, cancel_reservation, get_available_seats, get_user_reservations
 from .schemas import ReservationCreate, ReservationResponse, ReservationCancelResponse

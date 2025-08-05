@@ -4,8 +4,8 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 import bcrypt
-from src.features.users.models import User
-from src.features.users.schemas import UserCreate, Role
+from src.features.user.models import User
+from src.features.user.schemas import UserCreate, Role
 from src.config.settings import settings
 from src.database import get_db
 from src.utils.is_valid_role import is_valid_role

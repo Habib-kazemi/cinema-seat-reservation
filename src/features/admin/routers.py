@@ -9,7 +9,7 @@ from src.features.cinema.schemas import CinemaCreate, CinemaResponse
 from src.features.hall.schemas import HallCreate, HallResponse
 from src.features.movie.schemas import MovieCreate, MovieResponse
 from src.features.showtime.schemas import ShowtimeCreate, ShowtimeResponse
-from src.features.users.schemas import UserResponse
+from src.features.user.schemas import UserResponse
 from src.features.reservation.schemas import ReservationResponse
 from .services import (
     create_cinema, delete_cinema, update_cinema, partial_update_cinema,
@@ -334,7 +334,7 @@ async def delete_showtime_endpoint(showtime_id: int, db: Session = Depends(get_d
         raise
 
 
-@router.get("/users", response_model=List[UserResponse])
+@router.get("/user", response_model=List[UserResponse])
 async def get_users_with_reservations_endpoint(db: Session = Depends(get_db)):
     try:
         logger.info("Fetching users with reservations")

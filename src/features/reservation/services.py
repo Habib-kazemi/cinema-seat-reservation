@@ -5,7 +5,7 @@ from sqlalchemy import not_
 from src.utils.is_valid_role import Role
 from src.features.showtime.models import Showtime
 from src.features.hall.models import Hall, Hall_position
-from src.features.users.models import User
+from src.features.user.models import User
 from .models import Reservation, Status
 from .schemas import ReservationCreate, ReservationResponse
 

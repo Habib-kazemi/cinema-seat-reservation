@@ -7,13 +7,13 @@ from src.features.cinema.models import Cinema
 from src.features.hall.models import Hall, Hall_position
 from src.features.movie.models import Movie
 from src.features.showtime.models import Showtime
-from src.features.users.models import User
+from src.features.user.models import User
 from src.features.reservation.models import Reservation, Status
 from src.features.cinema.schemas import CinemaCreate
 from src.features.hall.schemas import HallCreate
 from src.features.movie.schemas import MovieCreate
 from src.features.showtime.schemas import ShowtimeCreate
-from src.features.users.schemas import UserResponse
+from src.features.user.schemas import UserResponse
 from src.features.reservation.schemas import ReservationResponse
 
 
