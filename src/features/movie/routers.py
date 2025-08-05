@@ -1,7 +1,7 @@
 import logging
 from datetime import date
 from typing import Optional, List
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from src.database import get_db
 from .services import get_movies
@@ -18,8 +18,17 @@ async def get_movies_endpoint(
     release_date_lte: Optional[date] = None,
     db: Session = Depends(get_db)
 ):
-    logger.info("Fetching movies with filters: genre_id=%s, release_date_gte=%s, release_date_lte=%s",
-                genre_id, release_date_gte, release_date_lte)
-    result = get_movies(genre_id, release_date_gte, release_date_lte, db)
-    logger.info("Fetched %s movies", len(result))
-    return result
+    try:
+        logger.info("Fetching movies with filters: genre_id=%s, release_date_gte=%s, release_date_lte=%s",
+                    genre_id, release_date_gte, release_date_lte)
+        result = get_movies(genre_id, release_date_gte, release_date_lte, db)
+        logger.info("Fetched %s movies", len(result))
+        return result
+    except HTTPException as e:
+        logger.error("Failed to fetch movies with filters: genre_id=%s, release_date_gte=%s, release_date_lte=%s, error: %s",
+                     genre_id, release_date_gte, release_date_lte, str(e.detail))
+        raise
+    except Exception as e:
+        logger.error("Unexpected error fetching movies with filters: genre_id=%s, release_date_gte=%s, release_date_lte=%s, error: %s",
+                     genre_id, release_date_gte, release_date_lte, str(e))
+        raise
