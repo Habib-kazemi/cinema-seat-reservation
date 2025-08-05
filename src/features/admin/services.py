@@ -375,7 +375,21 @@ def approve_reservation(reservation_id: int, db: Session) -> ReservationResponse
     reservation.status = Status.CONFIRMED
     db.commit()
     db.refresh(reservation)
-    return reservation
+    position = db.query(Hall_position).filter(
+        Hall_position.id == reservation.position_id).first()
+    if not position:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Position not found")
+    return ReservationResponse(
+        id=reservation.id,
+        user_id=reservation.user_id,
+        showtime_id=reservation.showtime_id,
+        row_index=position.row_index,
+        column_index=position.column_index,
+        price=float(reservation.price),
+        status=reservation.status,
+        created_at=reservation.created_at
+    )
 
 
 def reject_reservation(reservation_id: int, db: Session) -> ReservationResponse:
@@ -390,4 +404,18 @@ def reject_reservation(reservation_id: int, db: Session) -> ReservationResponse:
     reservation.status = Status.CANCELED
     db.commit()
     db.refresh(reservation)
-    return reservation
+    position = db.query(Hall_position).filter(
+        Hall_position.id == reservation.position_id).first()
+    if not position:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Position not found")
+    return ReservationResponse(
+        id=reservation.id,
+        user_id=reservation.user_id,
+        showtime_id=reservation.showtime_id,
+        row_index=position.row_index,
+        column_index=position.column_index,
+        price=float(reservation.price),
+        status=reservation.status,
+        created_at=reservation.created_at
+    )
