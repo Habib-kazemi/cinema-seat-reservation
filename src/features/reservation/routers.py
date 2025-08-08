@@ -5,7 +5,7 @@ from src.database import get_db
 from src.features.user.models import User
 from src.features.auth.services import get_current_user
 from .services import create_reservation, cancel_reservation, get_available_seats, get_user_reservations
-from .schemas import ReservationCreate, ReservationResponse, ReservationCancelResponse
+from .schemas import ReservationCreate, ReservationResponse, ReservationCancelResponse, SeatStatusResponse
 
 router = APIRouter(tags=["reservation"])
 logger = logging.getLogger(__name__)
@@ -55,13 +55,13 @@ async def cancel_reservation_endpoint(
         raise
 
 
-@router.get("/showtime/{showtime_id}/seats")
+@router.get("/showtime/{showtime_id}/seat", response_model=SeatStatusResponse)
 async def get_available_seats_endpoint(showtime_id: int, db: Session = Depends(get_db)):
     try:
         logger.info("Fetching available seats for showtime ID: %s", showtime_id)
         result = get_available_seats(showtime_id, db)
-        logger.info("Fetched %s available seats for showtime ID: %s",
-                    len(result["available_seats"]), showtime_id)
+        logger.info("Fetched %s seats for showtime ID: %s",
+                    len(result["available_seat"]), showtime_id)
         return result
     except HTTPException as e:
         logger.error("Failed to fetch available seats for showtime ID: %s, error: %s",

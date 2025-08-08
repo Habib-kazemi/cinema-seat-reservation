@@ -27,7 +27,7 @@ async def get_cinemas_endpoint(db: Session = Depends(get_db)):
         raise
 
 
-@router.get("/{cinema_id}/halls", response_model=List[HallResponse])
+@router.get("/{cinema_id}/hall", response_model=List[HallResponse])
 async def get_cinema_halls_endpoint(cinema_id: int, db: Session = Depends(get_db)):
     try:
         logger.info("Fetching halls for cinema ID: %s", cinema_id)
@@ -45,7 +45,7 @@ async def get_cinema_halls_endpoint(cinema_id: int, db: Session = Depends(get_db
         raise
 
 
-@router.get("/{cinema_id}/showtimes", response_model=List[ShowtimeResponse])
+@router.get("/{cinema_id}/showtime", response_model=List[ShowtimeResponse])
 async def get_cinema_showtimes_endpoint(cinema_id: int, db: Session = Depends(get_db)):
     try:
         logger.info("Fetching showtimes for cinema ID: %s", cinema_id)

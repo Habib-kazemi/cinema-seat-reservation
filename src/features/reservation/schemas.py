@@ -1,12 +1,25 @@
 from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, field_serializer
+from typing import List
 
 
 class Status(str, Enum):
     PENDING = "PENDING"
     CONFIRMED = "CONFIRMED"
     CANCELED = "CANCELED"
+
+
+class SeatStatus(BaseModel):
+    position_id: int
+    row_index: int
+    column_index: int
+    status: str
+
+
+class SeatStatusResponse(BaseModel):
+    showtime_id: int
+    available_seat: List[SeatStatus]
 
 
 class ReservationBase(BaseModel):
@@ -22,6 +35,7 @@ class ReservationCreate(ReservationBase):
 class ReservationResponse(ReservationBase):
     id: int
     user_id: int
+    position_id: int
     price: float
     created_at: datetime
     status: Status

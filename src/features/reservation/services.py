@@ -1,7 +1,6 @@
 from typing import List
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import not_
 from src.utils.is_valid_role import Role
 from src.features.showtime.models import Showtime
 from src.features.hall.models import Hall, Hall_position
@@ -49,6 +48,7 @@ def create_reservation(reservation: ReservationCreate, current_user: User, db: S
         id=db_reservation.id,
         user_id=db_reservation.user_id,
         showtime_id=db_reservation.showtime_id,
+        position_id=db_reservation.position_id,
         row_index=position.row_index,
         column_index=position.column_index,
         price=float(db_reservation.price),
@@ -85,16 +85,21 @@ def get_available_seats(showtime_id: int, db: Session):
         Reservation.status == Status.CONFIRMED
     ).all()
     reserved_position_ids = [pos_id for (pos_id,) in reserved_positions]
-    available_positions = db.query(Hall_position).filter(
-        Hall_position.hall_id == showtime.hall_id,
-        not_(Hall_position.id.in_(reserved_position_ids))
+    all_positions = db.query(Hall_position).filter(
+        Hall_position.hall_id == showtime.hall_id
     ).all()
+    seats = []
+    for pos in all_positions:
+        seatstatus = "reserved" if pos.id in reserved_position_ids else "available"
+        seats.append({
+            "position_id": pos.id,
+            "row_index": pos.row_index,
+            "column_index": pos.column_index,
+            "status": seatstatus
+        })
     return {
         "showtime_id": showtime_id,
-        "available_seats": [
-            {"row_index": pos.row_index, "column_index": pos.column_index}
-            for pos in available_positions
-        ]
+        "available_seat": seats
     }
 
 
@@ -112,6 +117,7 @@ def get_user_reservations(current_user: User, db: Session) -> List[ReservationRe
             id=r.id,
             user_id=r.user_id,
             showtime_id=r.showtime_id,
+            position_id=r.position_id,
             row_index=r.position.row_index,
             column_index=r.position.column_index,
             price=float(r.price),

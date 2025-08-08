@@ -17,7 +17,7 @@ from .services import (
     create_movie, update_movie, partial_update_movie, delete_movie,
     create_showtime, update_showtime, partial_update_showtime, delete_showtime,
     get_users_with_reservations, approve_reservation, reject_reservation,
-    get_total_sales
+    get_total_sale
 )
 
 router = APIRouter(tags=["admin"], dependencies=[Depends(check_admin)])
@@ -351,8 +351,8 @@ async def get_users_with_reservations_endpoint(db: Session = Depends(get_db)):
         raise
 
 
-@router.get("/total_sales", response_model=dict)
-async def get_total_sales_endpoint(
+@router.get("/total_sale", response_model=dict)
+async def get_total_sale_endpoint(
     db: Session = Depends(get_db),
     cinema_id: Optional[int] = Query(None, description="Filter by cinema ID"),
     showtime_id: Optional[int] = Query(
@@ -363,18 +363,18 @@ async def get_total_sales_endpoint(
         None, description="Filter by end date")
 ):
     try:
-        logger.info("Fetching total sales with filters: cinema_id=%s, showtime_id=%s, start_date=%s, end_date=%s",
+        logger.info("Fetching total sale with filters: cinema_id=%s, showtime_id=%s, start_date=%s, end_date=%s",
                     cinema_id, showtime_id, start_date, end_date)
-        result = get_total_sales(
+        result = get_total_sale(
             db, cinema_id, showtime_id, start_date, end_date)
-        logger.info("Fetched total sales: %s", result["total_sales"])
+        logger.info("Fetched total sale: %s", result["total_sale"])
         return result
     except HTTPException as e:
-        logger.error("Failed to fetch total sales with filters: cinema_id=%s, showtime_id=%s, error: %s",
+        logger.error("Failed to fetch total sale with filters: cinema_id=%s, showtime_id=%s, error: %s",
                      cinema_id, showtime_id, str(e.detail))
         raise
     except Exception as e:
-        logger.error("Unexpected error fetching total sales with filters: cinema_id=%s, showtime_id=%s, error: %s",
+        logger.error("Unexpected error fetching total sale with filters: cinema_id=%s, showtime_id=%s, error: %s",
                      cinema_id, showtime_id, str(e))
         raise
 

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -11,8 +11,8 @@ from src.features.user.models import User
 from src.features.reservation.models import Reservation, Status
 from src.features.cinema.schemas import CinemaCreate
 from src.features.hall.schemas import HallCreate
-from src.features.movie.schemas import MovieCreate
-from src.features.showtime.schemas import ShowtimeCreate
+from src.features.movie.schemas import MovieCreate, MovieResponse
+from src.features.showtime.schemas import ShowtimeCreate, ShowtimeResponse
 from src.features.user.schemas import UserResponse
 from src.features.reservation.schemas import ReservationResponse
 
@@ -240,18 +240,15 @@ def delete_movie(movie_id: int, db: Session):
         detail="Deletion not allowed; please remove dependent showtimes first")
 
 
-def create_showtime(showtime: ShowtimeCreate, db: Session):
-
+def create_showtime(showtime: ShowtimeCreate, db: Session) -> ShowtimeResponse:
     movie = db.query(Movie).filter(Movie.id == showtime.movie_id).first()
     if not movie:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
-
     hall = db.query(Hall).filter(Hall.id == showtime.hall_id).first()
     if not hall:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Hall not found")
-
     existing_showtime = db.query(Showtime).filter(
         Showtime.hall_id == showtime.hall_id,
         Showtime.start_time <= showtime.end_time,
@@ -261,11 +258,33 @@ def create_showtime(showtime: ShowtimeCreate, db: Session):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Hall is already booked for this time slot")
+    expected_end_time = showtime.start_time + timedelta(minutes=movie.duration)
+    if showtime.end_time != expected_end_time:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"End time must match movie duration ({movie.duration} minutes)"
+        )
     db_showtime = Showtime(**showtime.model_dump())
     db.add(db_showtime)
     db.commit()
     db.refresh(db_showtime)
-    return db_showtime
+    return ShowtimeResponse(
+        id=db_showtime.id,
+        movie_id=db_showtime.movie_id,
+        hall_id=db_showtime.hall_id,
+        start_time=db_showtime.start_time,
+        end_time=db_showtime.end_time,
+        price=db_showtime.price,
+        movie=MovieResponse(
+            id=movie.id,
+            title=movie.title,
+            genre_id=movie.genre_id,
+            duration=movie.duration,
+            release_date=movie.release_date,
+            description=movie.description,
+            poster_url=movie.poster_url
+        )
+    )
 
 
 def update_showtime(showtime_id: int, showtime: ShowtimeCreate, db: Session):
@@ -333,7 +352,7 @@ def get_users_with_reservations(db: Session) -> List[UserResponse]:
     return users
 
 
-def get_total_sales(
+def get_total_sale(
     db: Session,
     cinema_id: Optional[int] = None,
     showtime_id: Optional[int] = None,
@@ -360,7 +379,7 @@ def get_total_sales(
     if end_date:
         query = query.filter(Reservation.created_at <= end_date)
     total = query.scalar() or 0.0
-    return {"total_sales": float(total)}
+    return {"total_sale": float(total)}
 
 
 def approve_reservation(reservation_id: int, db: Session) -> ReservationResponse:
@@ -372,6 +391,12 @@ def approve_reservation(reservation_id: int, db: Session) -> ReservationResponse
     if reservation.status == Status.CONFIRMED:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Reservation already confirmed")
+    if reservation.status == Status.CANCELED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Reservation has been canceled by the user")
+    if reservation.status != Status.PENDING:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Only pending reservations can be approved")
     reservation.status = Status.CONFIRMED
     db.commit()
     db.refresh(reservation)
