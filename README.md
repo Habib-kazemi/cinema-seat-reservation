@@ -290,3 +290,15 @@ Create a feature branch (git checkout -b feature/branch-name).
 Commit changes (git commit -m "Add feature").
 Push to the branch (git push origin feature/branch-name).
 Create a pull request.
+
+## Deployment
+
+- **Database**: Deployed on Supabase with migrations applied (alembic).
+- **Application**: Deployed on Render using FastAPI and Gunicorn in Docker.
+- **Environment Variables**:
+  - DATABASE_URL: Supabase connection string with sslmode=require
+  - SECRET_KEY: JWT secret key
+  - ENVIRONMENT: Set to "production"
+  - WEB_CONCURRENCY: Set to 4
+- **Build Command**: `bash ./build.sh`
+- **Start Command**: `gunicorn -k uvicorn.workers.UvicornWorker src.main:app`

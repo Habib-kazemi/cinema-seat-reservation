@@ -19,28 +19,14 @@ depends_on = None
 
 
 def upgrade():
-    op.rename_table('users', 'user')
-    op.drop_constraint('reservation_user_id_fkey',
-                       'reservation', type_='foreignkey')
-    op.create_foreign_key(
-        'reservation_user_id_fkey',
-        'reservation',
-        'user',
-        ['user_id'],
-        ['id'],
-        ondelete='CASCADE'
-    )
+    # Check if 'users' table exists before renaming
+    inspector = sa.inspect(op.get_context().connection)
+    if inspector.has_table('users') and not inspector.has_table('user'):
+        op.rename_table('users', 'user')
 
 
 def downgrade():
-    op.drop_constraint('reservation_user_id_fkey',
-                       'reservation', type_='foreignkey')
-    op.create_foreign_key(
-        'reservation_user_id_fkey',
-        'reservation',
-        'users',
-        ['user_id'],
-        ['id'],
-        ondelete='CASCADE'
-    )
-    op.rename_table('user', 'users')
+    # Check if 'user' table exists before renaming back
+    inspector = sa.inspect(op.get_context().connection)
+    if inspector.has_table('user') and not inspector.has_table('users'):
+        op.rename_table('user', 'users')
